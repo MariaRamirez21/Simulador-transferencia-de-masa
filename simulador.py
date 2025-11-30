@@ -7,19 +7,14 @@ import numpy as np
 
 # --- Fórmulas/Correlaciones para el Número de Sherwood (Sh) ---
 # NOTA: Las correlaciones exactas dependen de la geometría y el régimen.
-# Aquí usamos una función simple de ejemplo para ilustrar el concepto y la dependencia de Re y Sc.
 
 def calcular_sherwood(geometria, Re, Sc, usar_DAB=False):
     """
     Calcula un valor representativo de Sherwood (Sh)
     usando correlaciones simplificadas basadas en la imagen.
-
-    Las correlaciones reales para transferencia de masa son análogas a las de transferencia de calor
-    (sustituyendo Nu, Pr, Re por Sh, Sc, Re) y son específicas para cada geometría (placa plana, cilindro, etc.).
     """
     if not usar_DAB:
-        # La casilla DAB es esencial para kc y Sc, por lo que si no se marca,
-        # retornamos un valor nulo o indicamos que se debe marcar.
+        # Retorna 0.0 si DAB no está marcado
         return 0.0
 
     # Correlaciones simplificadas (ejemplos):
@@ -30,13 +25,13 @@ def calcular_sherwood(geometria, Re, Sc, usar_DAB=False):
         # Analogía con flujo en tubo (turbulento, correlación de Sieder-Tate/Dittus-Boelter simplificada)
         Sh = 0.023 * (Re**0.8) * (Sc**(1/3))
     elif geometria == 'esfera':
-        # Correlación de Frössling/Ranz-Marshall (Sh = 2 + 0.6 * Re^0.5 * Sc^0.33)
+        # Correlación de Frössling/Ranz-Marshall
         Sh = 2.0 + 0.6 * (Re**0.5) * (Sc**(1/3))
     elif geometria == 'gota':
-        # Similar a la esfera, quizás con un término de velocidad interfacial
-        Sh = 2.0 + 0.6 * (Re**0.5) * (Sc**(1/3)) # Usamos la misma que esfera como ejemplo
+        # Similar a la esfera
+        Sh = 2.0 + 0.6 * (Re**0.5) * (Sc**(1/3)) 
     elif geometria == 'lecho empacado':
-        # Correlación de Chilton-Colburn o similares (Requiere más parámetros, usamos una simplificada)
+        # Correlación de Chilton-Colburn o similares (simplificada)
         Sh = 1.15 * (Re**0.6) * (Sc**(1/3))
     else:
         Sh = 0.0
@@ -46,8 +41,10 @@ def calcular_sherwood(geometria, Re, Sc, usar_DAB=False):
 # --- Inicialización de la Aplicación Dash ---
 app = dash.Dash(__name__)
 
+# CRUCIAL para Gunicorn/Render: Asigna la variable 'server'
+server = app.server
+
 # --- Definición de Componentes de la Interfaz ---
-# Opciones para el menú desplegable de geometría
 opciones_geometria = [
     {'label': 'Placa Plana', 'value': 'placa'},
     {'label': 'Tubo', 'value': 'tubo'},
@@ -204,11 +201,11 @@ def actualizar_resultados(geometria, Re, Sc, checklist_dab, DAB):
 
         # - Combinación Actual
         if Sh > 1000 and Re > 5000:
-             comb = "**Convección Forzada Dominante**"
+              comb = "**Convección Forzada Dominante**"
         elif Sh < 100 and Sc > 1000:
-             comb = "**Difusión Lenta Dominante**"
+              comb = "**Difusión Lenta Dominante**"
         else:
-             comb = "**Transferencia combinada convección/difusión**"
+              comb = "**Transferencia combinada convección/difusión**"
 
         interpretacion_parts.append(f"• **Combinación actual:** {comb} para la geometría de **{geometria.capitalize()}**.")
 
@@ -275,9 +272,7 @@ def actualizar_grafica(Sh_str, kc_str):
     # ESTA LÍNEA DEBE DEVOLVER LA FIGURA
     return fig
 
-# --- Ejecución del Servidor ---
-if __name__ == '__main__':
-    # Para ejecutar en un entorno local, el servidor se iniciará en http://127.0.0.1:8050/
-    # Usar host='0.0.0.0' asegura que escuche en todas las interfaces (local e ngrok)
-    app.run(debug=True, host='0.0.0.0')
+# --- Fin del código ---
+# Se eliminó la sección "if __name__ == '__main__': app.run(...)"
+# para que Gunicorn (Render) pueda ejecutar la aplicación correctamente.
    
